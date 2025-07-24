@@ -9,27 +9,28 @@ from cmu_graphics import *
 def onAppStart(app):
     app.width = 600
     app.height = 650 
-    app.board_size = 600
-    app.square_size = app.board_size // 8
+    app.boardSize = 600
+    app.squareSize = app.boardSize // 8
+    app.statusMessage = "White's turn"
 
 
-def draw_board(app):
+def drawBoard(app):
     for row in range(8):
         for col in range(8):
             color = rgb(220, 220, 220) if (row + col) % 2 == 0 else rgb(80, 130, 180)
             drawRect(
-                col * app.square_size,
-                row * app.square_size,
-                app.square_size,
-                app.square_size,
+                col * app.squareSize,
+                row * app.squareSize,
+                app.squareSize,
+                app.squareSize,
                 fill=color
             )
 
             if row == 7:
                 drawLabel(
                     chr(97 + col),
-                    col * app.square_size + 5,
-                    row * app.square_size + app.square_size - 5,
+                    col * app.squareSize + 5,
+                    row * app.squareSize + app.squareSize - 5,
                     size=12,
                     fill='black' if color == rgb(220, 220, 220) else 'white',
                     align='left-bottom'
@@ -38,15 +39,21 @@ def draw_board(app):
             if col == 0:
                 drawLabel(
                     str(8 - row),
-                    col * app.square_size + 5,
-                    row * app.square_size + 5,
+                    col * app.squareSize + 5,
+                    row * app.squareSize + 5,
                     size=12,
                     fill='black' if color == rgb(220, 220, 220) else 'white',
                     align='left-top'
                 )
 
+def drawStatus(app):
+    drawRect(0, app.boardSize, app.width, 50, fill='lightGray')
+    drawLabel(app.statusMessage, app.width // 2, app.boardSize + 20, size=20, bold=True)
+    drawLabel("Press 'r' to reset", app.width // 2, app.boardSize + 40, size=14, bold=True)
+
 def redrawAll(app):
-    draw_board(app)
+    drawBoard(app)
+    drawStatus(app)
 
 
 def main():
