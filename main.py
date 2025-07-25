@@ -1,10 +1,22 @@
 from cmu_graphics import *
 
 # TODO: 
-# Piece classes, 
-# class for ChessGame, 
-# initialize it in onAppStart
-# status messages
+# Make classes for each piece
+
+class Piece:
+    def __init__(self, type, color):
+        self.type = type
+        self.color = color
+
+class ChessGame:
+    def __init__(self):
+        self.board = [[None] * 8 for _ in range(8)]
+        self.setupPieces()
+    
+    def setupPieces(self):
+        for col in range(8):
+            self.board[1][col] = Piece('pawn', 'black')
+            self.board[6][col] = Piece('pawn', 'white')
 
 def onAppStart(app):
     app.width = 600
@@ -12,6 +24,28 @@ def onAppStart(app):
     app.boardSize = 600
     app.squareSize = app.boardSize // 8
     app.statusMessage = "White's turn"
+    app.game = ChessGame()
+
+def drawPieces(app):
+    for r in range(8):
+        for c in range(8):
+            piece = app.game.board[r][c]
+            if piece is not None:
+                x = c * app.squareSize + app.squareSize // 2
+                y = r * app.squareSize + app.squareSize // 2
+                color = 'black' if piece.color == 'black' else 'white'
+
+                pieces = {
+                    'king': 'pieces/wk.png' if color == 'white' else 'pieces/bk.png',
+                    'queen': 'pieces/wq.png' if color == 'white' else 'pieces/bq.png',
+                    'rook': 'pieces/wr.png' if color == 'white' else 'pieces/br.png',
+                    'bishop': 'pieces/wb.png' if color == 'white' else 'pieces/bb.png',
+                    'knight': 'pieces/wn.png' if color == 'white' else 'pieces/bn.png',
+                    'pawn': 'pieces/wp.png' if color == 'white' else 'pieces/bp.png'
+                }
+
+                pieceImage = pieces.get(piece.type, '?')
+                drawImage(pieceImage, x, y, width=app.squareSize, height=app.squareSize, align='center')
 
 
 def drawBoard(app):
@@ -54,6 +88,7 @@ def drawStatus(app):
 def redrawAll(app):
     drawBoard(app)
     drawStatus(app)
+    drawPieces(app)
 
 
 def main():
