@@ -36,6 +36,45 @@ class Pawn(Piece):
 
         return moves
 
+class Bishop(Piece):
+    def __init__(self, color):
+        super().__init__('bishop', color)
+
+    def getMoves(self, board, row, col):
+        moves = []
+        directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+
+        for drow, dcol in directions:
+            r, c = row + drow, col + dcol
+            while 0 <= r < 8 and 0 <= c < 8:
+                if board[r][c] is None:
+                    moves.append((r, c))
+                else:
+                    if board[r][c].color != self.color:
+                        moves.append((r, c))
+                    break
+                r += drow
+                c += dcol
+
+        return moves
+
+class Knight(Piece):
+    def __init__(self, color):
+        super().__init__('knight', color)
+
+class Rook(Piece):
+    def __init__(self, color):
+        super().__init__('rook', color)
+
+class Queen(Piece):
+    def __init__(self, color):
+        super().__init__('queen', color)
+
+class King(Piece):
+    def __init__(self, color):
+        super().__init__('king', color)
+
+
 class ChessGame:
     def __init__(self):
         self.board = [[None] * 8 for _ in range(8)]
@@ -46,13 +85,14 @@ class ChessGame:
     
     def setupPieces(self):
         backRow = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook']
+        pieceMap = {'rook': Rook, 'knight': Knight, 'bishop': Bishop, 'queen': Queen, 'king': King, 'pawn': Pawn}
+
         for col in range(8):
+            self.board[0][col] = pieceMap[backRow[col]]('black')
+            self.board[7][col] = pieceMap[backRow[col]]('white')
+
             self.board[1][col] = Pawn('black')
             self.board[6][col] = Pawn('white')
-        
-        for piece in range(len(backRow)):
-            self.board[0][piece] = Piece(backRow[piece], 'black')
-            self.board[7][piece] = Piece(backRow[piece], 'white')
 
 def onAppStart(app):
     app.width = 600
@@ -61,6 +101,7 @@ def onAppStart(app):
     app.squareSize = app.boardSize // 8
     app.statusMessage = "White's turn"
     app.game = ChessGame()
+    app.currentTurn = 'white'
 
 def onMousePress(app, x, y):
     row = y // app.squareSize
@@ -78,11 +119,13 @@ def onMousePress(app, x, y):
         board[ogRow][ogCol] = None
         app.game.selectedPiece = None
         app.game.validMoves = []
-        app.statusMessage = "Black's turn" if app.statusMessage.startswith("White") else "White's turn"
+        app.currentTurn = 'black' if app.currentTurn == 'white' else 'white'
+        app.statusMessage = f"{app.currentTurn.capitalize()}'s turn"
+
         return
 
     piece = board[row][col]
-    if piece and piece.type == 'pawn':
+    if piece and piece.color == app.currentTurn:
         moves = piece.getMoves(board, row, col)
         app.game.selectedPiece = (row, col)
         app.game.validMoves = moves
@@ -143,6 +186,17 @@ def drawBoard(app):
                     fill='black' if color == rgb(220, 220, 220) else 'white',
                     align='left-top'
                 )
+    
+    if app.game.selectedPiece is not None:
+        r, c = app.game.selectedPiece
+        drawRect(c * app.squareSize, r * app.squareSize, app.squareSize, app.squareSize,
+                 fill=None, border='yellow', borderWidth=3)
+
+    for (r, c) in app.game.validMoves:
+        drawCircle(c * app.squareSize + app.squareSize // 2,
+                   r * app.squareSize + app.squareSize // 2,
+                   app.squareSize // 6,
+                   fill='gold')
 
 def drawStatus(app):
     drawRect(0, app.boardSize, app.width, 50, fill='lightGray')
