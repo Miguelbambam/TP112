@@ -217,10 +217,8 @@ def drawBoard(app):
                  fill=None, border='yellow', borderWidth=3)
 
     for (r, c) in app.game.validMoves:
-        drawCircle(c * app.squareSize + app.squareSize // 2,
-                   r * app.squareSize + app.squareSize // 2,
-                   app.squareSize // 6,
-                   fill='gold'),
+        drawRect(c * app.squareSize, r * app.squareSize, app.squareSize, app.squareSize,
+                 fill=None, border='green', borderWidth=3)
 
 def drawStatus(app):
     drawRect(0, app.boardSize, app.width, 50, fill='lightGray')
