@@ -88,6 +88,12 @@ class Queen(Piece):
     def __init__(self, color):
         super().__init__('queen', color)
 
+    def getMoves(self, board, row, col):
+        rookMoves = Rook.getMoves(self, board, row, col)
+        bishopMoves = Bishop.getMoves(self, board, row, col)
+
+        return rookMoves + bishopMoves
+
 class King(Piece):
     def __init__(self, color):
         super().__init__('king', color)
@@ -214,7 +220,7 @@ def drawBoard(app):
         drawCircle(c * app.squareSize + app.squareSize // 2,
                    r * app.squareSize + app.squareSize // 2,
                    app.squareSize // 6,
-                   fill='gold')
+                   fill='gold'),
 
 def drawStatus(app):
     drawRect(0, app.boardSize, app.width, 50, fill='lightGray')
