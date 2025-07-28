@@ -66,6 +66,24 @@ class Rook(Piece):
     def __init__(self, color):
         super().__init__('rook', color)
 
+    def getMoves(self, board, row, col):
+        moves = []
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+        for drow, dcol in directions:
+            r, c = row + drow, col + dcol
+            while 0 <= r < 8 and 0 <= c < 8:
+                if board[r][c] is None:
+                    moves.append((r, c))
+                else:
+                    if board[r][c].color != self.color:
+                        moves.append((r, c))
+                    break
+                r += drow
+                c += dcol
+
+        return moves
+
 class Queen(Piece):
     def __init__(self, color):
         super().__init__('queen', color)
