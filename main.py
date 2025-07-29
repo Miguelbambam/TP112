@@ -4,14 +4,13 @@ from cmu_graphics import *
 """
 Citations:
 https://www.w3schools.com/python/python_inheritance.asp
-
-FIX KNIGHTS!!!!
 """
 
 class Piece:
     def __init__(self, type, color):
         self.type = type
         self.color = color
+        self.hasMoved = False
 
 class Pawn(Piece):
     def __init__(self, color):
@@ -150,6 +149,9 @@ class ChessGame:
         self.setupPieces()
         self.selectedPiece = None
         self.validMoves = []
+        self.turn = 'white'
+        self.gameOver = False
+        self.winner = None
 
     
     def setupPieces(self):
@@ -162,6 +164,48 @@ class ChessGame:
 
             self.board[1][col] = Pawn('black')
             self.board[6][col] = Pawn('white')
+    
+    def findKing(self, color):
+        for row in range(8):
+            for col in range(8):
+                piece = self.board[row][col]
+                if piece and piece.type == 'king' and piece.color == color:
+                    return (row, col)
+        return None
+
+    def isSquareAttacked(self, row, col, attackerColor):
+        for r in range(8):
+            for c in range(8):
+                piece = self.board[r][c]
+                if piece and piece.color == attackerColor:
+                    if (row, col) in piece.getMoves(self.board, r, c):
+                        return True
+        return False
+
+    def isInCheck(self, color):
+        kingRow, kingCol = self.findKing(color)
+        return self.isSquareAttacked(kingRow, kingCol, 'black' if color == 'white' else 'white')
+
+    def getLegalMoves(self, piece, row, col):
+        legal = []
+        for move in piece.getMoves(self.board, row, col):
+            r2, c2 = move
+            captured = self.board[r2][c2]
+            self.board[r2][c2], self.board[row][col] = piece, None
+            if not self.isInCheck(piece.color):
+                legal.append(move)
+            self.board[row][col], self.board[r2][c2] = piece, captured
+        return legal
+
+    def isCheckmate(self, color):
+        if not self.isInCheck(color): return False
+        for row in range(8):
+            for col in range(8):
+                piece = self.board[row][col]
+                if piece and piece.color == color:
+                    if self.getLegalMoves(piece, row, col):
+                        return False
+        return True
 
 def onAppStart(app):
     app.width = 600
@@ -170,37 +214,46 @@ def onAppStart(app):
     app.squareSize = app.boardSize // 8
     app.statusMessage = "White's turn"
     app.game = ChessGame()
-    app.currentTurn = 'white'
 
 def onMousePress(app, x, y):
     row = y // app.squareSize
     col = x // app.squareSize
 
-    if row >= 8 or col >= 8: return
+    if row >= 8 or col >= 8 or app.game.gameOver == True: return
 
     board = app.game.board
     selected = app.game.selectedPiece
     validMoves = app.game.validMoves
+    game = app.game
 
     if selected and (row, col) in validMoves:
-        ogRow, ogCol = selected
-        board[row][col] = board[ogRow][ogCol]
-        board[ogRow][ogCol] = None
-        app.game.selectedPiece = None
-        app.game.validMoves = []
-        app.currentTurn = 'black' if app.currentTurn == 'white' else 'white'
-        app.statusMessage = f"{app.currentTurn.capitalize()}'s turn"
+        startRow, startCol = selected
+        piece = board[startRow][startCol]
+        board[row][col], board[startRow][startCol] = piece, None
+        piece.hasMoved = True
+        piece.position = (row, col)
+        game.selectedPiece = None
+        game.validMoves = []
+        game.turn = 'black' if game.turn == 'white' else 'white'
 
+        if game.isInCheck(game.turn):
+            if game.isCheckmate(game.turn):
+                game.gameOver = True
+                game.winner = 'white' if game.turn == 'black' else 'black'
+                app.statusMessage = f"Checkmate! {game.winner.capitalize()} wins!"
+            else:
+                app.statusMessage = f"{game.turn.capitalize()} is in check!"
+        else:
+            app.statusMessage = f"{game.turn.capitalize()}'s turn"
         return
 
     piece = board[row][col]
-    if piece and piece.color == app.currentTurn:
-        moves = piece.getMoves(board, row, col)
-        app.game.selectedPiece = (row, col)
-        app.game.validMoves = moves
+    if piece and piece.color == game.turn:
+        game.selectedPiece = (row, col)
+        game.validMoves = game.getLegalMoves(piece, row, col)
     else:
-        app.game.selectedPiece = None
-        app.game.validMoves = []
+        game.selectedPiece = None
+        game.validMoves = []
 
 def drawPieces(app):
     for r in range(8):
