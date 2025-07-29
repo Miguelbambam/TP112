@@ -4,6 +4,8 @@ from cmu_graphics import *
 """
 Citations:
 https://www.w3schools.com/python/python_inheritance.asp
+
+FIX KNIGHTS!!!!
 """
 
 class Piece:
@@ -62,6 +64,25 @@ class Knight(Piece):
     def __init__(self, color):
         super().__init__('knight', color)
 
+    def getMoves(self, board, row, col):
+        moves = []
+        directions = [(-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1)]
+
+        for drow, dcol in directions:
+            r, c = row + drow, col + dcol
+            while 0 <= r < 8 and 0 <= c < 8:
+                if board[r][c] is None:
+                    moves.append((r, c))
+                    break
+                else:
+                    if board[r][c].color != self.color:
+                        moves.append((r, c))
+                    break
+                r += drow
+                c += dcol
+
+        return moves
+
 class Rook(Piece):
     def __init__(self, color):
         super().__init__('rook', color)
@@ -97,6 +118,30 @@ class Queen(Piece):
 class King(Piece):
     def __init__(self, color):
         super().__init__('king', color)
+    
+    def getMoves(self, board, row, col):
+        moves = []
+        directions = [
+            (-1, -1), (-1, 0), (-1, 1),
+            ( 0, -1),          ( 0, 1),
+            ( 1, -1), ( 1, 0), ( 1, 1)
+        ]
+
+
+        for drow, dcol in directions:
+            r, c = row + drow, col + dcol
+            while 0 <= r < 8 and 0 <= c < 8:
+                if board[r][c] is None:
+                    moves.append((r, c))
+                    break
+                else:
+                    if board[r][c].color != self.color:
+                        moves.append((r, c))
+                    break
+                r += drow
+                c += dcol
+
+        return moves
 
 
 class ChessGame:
