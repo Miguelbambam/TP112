@@ -1,5 +1,14 @@
 [
-    { "name": "Alice", "elo": 1200 },
-    { "name": "Bob", "elo": 1300 },
-    { "name": "Charlie", "elo": 1100 }
+  {
+    "name": "Alice",
+    "elo": 1200
+  },
+  {
+    "name": "Bob",
+    "elo": 1300
+  },
+  {
+    "name": "Charlie",
+    "elo": 1100
+  }
 ]

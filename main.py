@@ -27,6 +27,9 @@ def onAppStart(app):
     app.statusMessage = ""
     app.game = None
 
+    app.creatingUser = False
+    app.newUserName = ""
+
 def onKeyPress(app, key):
     if key == 'r' and app.screen == 'game':
         app.game = ChessGame()
@@ -37,6 +40,22 @@ def onKeyPress(app, key):
             app.game = ChessGame()
             app.statusMessage = f"{app.users[app.selectedWhite]['name']} (White) vs {app.users[app.selectedBlack]['name']} (Black)"
             app.screen = 'game'
+    
+    if app.creatingUser:
+        if key == 'enter' and app.newUserName.strip() != "":
+            newUser = {
+                "name": app.newUserName.strip(),
+                "elo": 1200
+            }
+            app.users.append(newUser)
+            with open("users.json", "w") as f:
+                json.dump(app.users, f, indent=2)
+            app.creatingUser = False
+            app.newUserName = ""
+        elif key == 'backspace':
+            app.newUserName = app.newUserName[:-1]
+        elif len(key) == 1 and key.isprintable():
+            app.newUserName += key
 
 def onMousePress(app, x, y):
     if app.screen == 'home':
@@ -50,6 +69,11 @@ def onMousePress(app, x, y):
                 elif app.selectedBlack is None and index != app.selectedWhite:
                     app.selectedBlack = index
             index += 1
+
+        if 200 <= x <= 400 and 580 <= y <= 620:
+            app.creatingUser = True
+            app.newUserName = ""
+            return
         return
 
     if app.screen != 'game':
@@ -208,6 +232,13 @@ def drawHomeScreen(app):
         drawLabel("Click to select BLACK player", app.width // 2, 500, size=16, italic=True)
     else:
         drawLabel("Press ENTER to start the game", app.width // 2, 500, size=16, italic=True)
+    
+    drawRect(200, 580, 200, 40, fill='lightgreen', border='black')
+    drawLabel("Create New User", 300, 600, size=16, bold=True)
+
+    if app.creatingUser:
+        drawRect(150, 530, 300, 40, fill='white', border='black')
+        drawLabel(f"Enter name: {app.newUserName}", 300, 550, size=16)
 
 
 
