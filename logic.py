@@ -108,8 +108,12 @@ class King(Piece):
             for c in range(8):
                 piece = board[r][c]
                 if piece and piece.color != color:
-                    if (row, col) in piece.getMoves(board, r, c):
-                        return True
+                    if piece.type == 'king':
+                        if abs(row - r) <= 1 and abs(col - c) <= 1:
+                            return True
+                    else:
+                        if (row, col) in piece.getMoves(board, r, c):
+                            return True
         return False
     
     def getMoves(self, board, row, col):
@@ -183,8 +187,12 @@ class ChessGame:
             for c in range(8):
                 piece = self.board[r][c]
                 if piece and piece.color == attackerColor:
-                    if (row, col) in piece.getMoves(self.board, r, c):
-                        return True
+                    if piece.type == 'king':
+                        if abs(row - r) <= 1 and abs(col - c) <= 1:
+                            return True
+                    else:
+                        if (row, col) in piece.getMoves(self.board, r, c):
+                            return True
         return False
 
     def isInCheck(self, color):
