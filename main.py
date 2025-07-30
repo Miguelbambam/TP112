@@ -215,6 +215,11 @@ def onAppStart(app):
     app.statusMessage = "White's turn"
     app.game = ChessGame()
 
+def onKeyPress(app, key):
+    if key == 'r':
+        app.game = ChessGame()
+        app.statusMessage = "White's turn"
+
 def onMousePress(app, x, y):
     row = y // app.squareSize
     col = x // app.squareSize
