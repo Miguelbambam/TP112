@@ -26,10 +26,11 @@ def onMousePress(app, x, y):
 
     if row >= 8 or col >= 8 or app.game.gameOver == True: return
 
-    board = app.game.board
-    selected = app.game.selectedPiece
-    validMoves = app.game.validMoves
     game = app.game
+    board = game.board
+    selected = game.selectedPiece
+    validMoves = game.validMoves
+
 
     if selected and (row, col) in validMoves:
         startRow, startCol = selected
@@ -48,6 +49,10 @@ def onMousePress(app, x, y):
                 app.statusMessage = f"Checkmate! {game.winner.capitalize()} wins!"
             else:
                 app.statusMessage = f"{game.turn.capitalize()} is in check!"
+        elif game.isStalemate(game.turn):
+                game.gameOver = True
+                game.winner = None
+                app.statusMessage = "Stalemate! It's a draw."
         else:
             app.statusMessage = f"{game.turn.capitalize()}'s turn"
         return

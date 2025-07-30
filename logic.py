@@ -66,7 +66,7 @@ class Knight(Piece):
                 if board[r][c] is None or board[r][c].color != self.color:
                     moves.append((r, c))
         return moves
-        
+
 class Rook(Piece):
     def __init__(self, color):
         super().__init__('rook', color)
@@ -176,6 +176,17 @@ class ChessGame:
 
     def isCheckmate(self, color):
         if not self.isInCheck(color): return False
+        for row in range(8):
+            for col in range(8):
+                piece = self.board[row][col]
+                if piece and piece.color == color:
+                    if self.getLegalMoves(piece, row, col):
+                        return False
+        return True
+    
+    def isStalemate(self, color):
+        if self.isInCheck(color):
+            return False
         for row in range(8):
             for col in range(8):
                 piece = self.board[row][col]
