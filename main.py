@@ -1,26 +1,60 @@
 from cmu_graphics import *
 from logic import *
+import json
 
 
 """
 Citations:
 https://www.w3schools.com/python/python_inheritance.asp
+https://www.w3schools.com/python/python_json.asp
+Chess.com for piece images
 """
+
+def loadUsers():
+    with open("users.json", "r") as f:
+        return json.load(f)
 
 def onAppStart(app):
     app.width = 600
     app.height = 650 
     app.boardSize = 600
     app.squareSize = app.boardSize // 8
-    app.statusMessage = "White's turn"
-    app.game = ChessGame()
+    
+    app.screen = 'home'
+    app.users = loadUsers()
+    app.selectedWhite = None
+    app.selectedBlack = None
+    app.statusMessage = ""
+    app.game = None
 
 def onKeyPress(app, key):
-    if key == 'r':
+    if key == 'r' and app.screen == 'game':
         app.game = ChessGame()
-        app.statusMessage = "White's turn"
+        app.statusMessage = f"{app.users[app.selectedWhite]['name']} (White) vs {app.users[app.selectedBlack]['name']} (Black)"
+    
+    elif app.screen == 'home' and key == 'enter':
+        if app.selectedWhite is not None and app.selectedBlack is not None:
+            app.game = ChessGame()
+            app.statusMessage = f"{app.users[app.selectedWhite]['name']} (White) vs {app.users[app.selectedBlack]['name']} (Black)"
+            app.screen = 'game'
 
 def onMousePress(app, x, y):
+    if app.screen == 'home':
+        yStart = 100
+        index = 0
+        for user in app.users:
+            boxY = yStart + index * 60
+            if 150 <= x <= 450 and (boxY - 25) <= y <= (boxY + 25):
+                if app.selectedWhite is None:
+                    app.selectedWhite = index
+                elif app.selectedBlack is None and index != app.selectedWhite:
+                    app.selectedBlack = index
+            index += 1
+        return
+
+    if app.screen != 'game':
+        return
+
     row = y // app.squareSize
     col = x // app.squareSize
 
@@ -139,19 +173,51 @@ def drawBoard(app):
                  fill=None, border='yellow', borderWidth=3)
 
     for (r, c) in app.game.validMoves:
-        color = 'green' if app.game.board[r][c] is None else 'red'
-        drawRect(c * app.squareSize, r * app.squareSize, app.squareSize, app.squareSize,
-                 fill=None, border=color, borderWidth=3)
+        if app.game.board[r][c] is None:
+            drawCircle((c * app.squareSize) + app.squareSize//2, (r * app.squareSize) + app.squareSize//2,
+                       app.squareSize//6, fill='gold')
+        else:
+            drawRect(c * app.squareSize, r * app.squareSize, app.squareSize, app.squareSize,
+                     fill=None, border='red', borderWidth=3)
 
 def drawStatus(app):
     drawRect(0, app.boardSize, app.width, 50, fill='lightGray')
     drawLabel(app.statusMessage, app.width // 2, app.boardSize + 20, size=20, bold=True)
     drawLabel("Press 'r' to reset", app.width // 2, app.boardSize + 40, size=14, bold=True)
 
+def drawHomeScreen(app):
+    drawLabel("Select White and Black Players", app.width // 2, 40, size=24, bold=True)
+
+    yStart = 100
+    index = 0
+    for user in app.users:
+        y = yStart + index * 60
+        boxColor = 'white'
+        if app.selectedWhite == index:
+            boxColor = 'lightyellow'
+        elif app.selectedBlack == index:
+            boxColor = 'lightblue'
+
+        drawRect(150, y - 25, 300, 50, fill=boxColor, border='black')
+        drawLabel(f"{user['name']} (ELO: {user['elo']})", app.width // 2, y, size=20)
+        index += 1
+
+    if app.selectedWhite is None:
+        drawLabel("Click to select WHITE player", app.width // 2, 500, size=16, italic=True)
+    elif app.selectedBlack is None:
+        drawLabel("Click to select BLACK player", app.width // 2, 500, size=16, italic=True)
+    else:
+        drawLabel("Press ENTER to start the game", app.width // 2, 500, size=16, italic=True)
+
+
+
 def redrawAll(app):
-    drawBoard(app)
-    drawStatus(app)
-    drawPieces(app)
+    if app.screen == 'home':
+        drawHomeScreen(app)
+    elif app.screen == 'game':
+        drawBoard(app)
+        drawStatus(app)
+        drawPieces(app)
 
 
 def main():
