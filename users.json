@@ -1,14 +1,18 @@
 [
   {
-    "name": "Alice",
-    "elo": 1200
+    "name": "Kai",
+    "elo": 710
   },
   {
-    "name": "Bob",
-    "elo": 1300
+    "name": "Jay",
+    "elo": 488
   },
   {
-    "name": "Charlie",
-    "elo": 1100
+    "name": "Cole",
+    "elo": 800
+  },
+  {
+    "name": "Zane",
+    "elo": 2900
   }
 ]

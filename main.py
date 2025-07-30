@@ -7,12 +7,25 @@ import json
 Citations:
 https://www.w3schools.com/python/python_inheritance.asp
 https://www.w3schools.com/python/python_json.asp
+https://www.w3schools.com/python/python_ref_string.asp
+https://en.wikipedia.org/wiki/Elo_rating_system
 Chess.com for piece images
 """
 
 def loadUsers():
     with open("users.json", "r") as f:
         return json.load(f)
+
+def saveUsers(users):
+    with open("users.json", "w") as f:
+        json.dump(users, f, indent=2)
+
+def calculateElo(ratingA, ratingB, scoreA, K=20):
+    expectedA = 1 / (1 + 10 ** ((ratingB - ratingA) / 400))
+    ratingANew = ratingB + K * (scoreA - expectedA)
+    return int(ratingANew)
+
+
 
 def onAppStart(app):
     app.width = 600
@@ -30,16 +43,52 @@ def onAppStart(app):
     app.creatingUser = False
     app.newUserName = ""
 
+    app.isFlipped = False
+
+def getDisplayCoords(app, row, col):
+    if app.isFlipped:
+        return 7 - row, 7 - col
+    return row, col
+
+def updateEloAfterGame(app):
+    whiteIndex = app.selectedWhite
+    blackIndex = app.selectedBlack
+    whiteUser = app.users[whiteIndex]
+    blackUser = app.users[blackIndex]
+
+    if app.game.winner == 'white':
+        scoreWhite, scoreBlack = 1, 0
+        resultMessage = f"{whiteUser['name']} (White) wins!"
+    elif app.game.winner == 'black':
+        scoreWhite, scoreBlack = 0, 1
+        resultMessage = f"{blackUser['name']} (Black) wins!"
+    else:
+        scoreWhite = scoreBlack = 0.5
+        resultMessage = "It's a draw!"
+
+    newWhiteElo = calculateElo(whiteUser['elo'], blackUser['elo'], scoreWhite)
+    newBlackElo = calculateElo(blackUser['elo'], whiteUser['elo'], scoreBlack)
+
+    whiteUser['elo'] = newWhiteElo
+    blackUser['elo'] = newBlackElo
+
+    saveUsers(app.users)
+
+    app.statusMessage = f"Game Over! {resultMessage} New ELOs — {whiteUser['name']}: {newWhiteElo}, {blackUser['name']}: {newBlackElo}"
+
+
 def onKeyPress(app, key):
     if key == 'r' and app.screen == 'game':
         app.game = ChessGame()
         app.statusMessage = f"{app.users[app.selectedWhite]['name']} (White) vs {app.users[app.selectedBlack]['name']} (Black)"
+        app.isFlipped = False
     
     elif app.screen == 'home' and key == 'enter':
         if app.selectedWhite is not None and app.selectedBlack is not None:
             app.game = ChessGame()
             app.statusMessage = f"{app.users[app.selectedWhite]['name']} (White) vs {app.users[app.selectedBlack]['name']} (Black)"
             app.screen = 'game'
+            app.isFlipped = False
     
     if app.creatingUser:
         if key == 'enter' and app.newUserName.strip() != "":
@@ -81,6 +130,10 @@ def onMousePress(app, x, y):
 
     row = y // app.squareSize
     col = x // app.squareSize
+    
+    if app.isFlipped:
+        row = 7 - row
+        col = 7 - col
 
     if row >= 8 or col >= 8 or app.game.gameOver == True: return
 
@@ -113,18 +166,19 @@ def onMousePress(app, x, y):
         game.selectedPiece = None
         game.validMoves = []
         game.turn = 'black' if game.turn == 'white' else 'white'
+        app.isFlipped = (game.turn == 'black')
 
         if game.isInCheck(game.turn):
             if game.isCheckmate(game.turn):
                 game.gameOver = True
                 game.winner = 'white' if game.turn == 'black' else 'black'
-                app.statusMessage = f"Checkmate! {game.winner.capitalize()} wins!"
+                updateEloAfterGame(app)
             else:
                 app.statusMessage = f"{game.turn.capitalize()} is in check!"
         elif game.isStalemate(game.turn):
                 game.gameOver = True
                 game.winner = None
-                app.statusMessage = "Stalemate! It's a draw."
+                updateEloAfterGame(app)
         else:
             app.statusMessage = f"{game.turn.capitalize()}'s turn"
         return
@@ -142,8 +196,9 @@ def drawPieces(app):
         for c in range(8):
             piece = app.game.board[r][c]
             if piece is not None:
-                x = c * app.squareSize + app.squareSize // 2
-                y = r * app.squareSize + app.squareSize // 2
+                dr, dc = getDisplayCoords(app, r, c)
+                x = dc * app.squareSize + app.squareSize // 2
+                y = dr * app.squareSize + app.squareSize // 2
                 color = 'black' if piece.color == 'black' else 'white'
 
                 pieces = {
@@ -162,30 +217,31 @@ def drawPieces(app):
 def drawBoard(app):
     for row in range(8):
         for col in range(8):
+            dr, dc = getDisplayCoords(app, row, col)
             color = rgb(220, 220, 220) if (row + col) % 2 == 0 else rgb(80, 130, 180)
             drawRect(
-                col * app.squareSize,
-                row * app.squareSize,
+                dc * app.squareSize,
+                dr * app.squareSize,
                 app.squareSize,
                 app.squareSize,
                 fill=color
             )
 
-            if row == 7:
+            if dr == 7:
                 drawLabel(
                     chr(97 + col),
-                    col * app.squareSize + 5,
-                    row * app.squareSize + app.squareSize - 5,
+                    dc * app.squareSize + 5,
+                    dr * app.squareSize + app.squareSize - 5,
                     size=12,
                     fill='black' if color == rgb(220, 220, 220) else 'white',
                     align='left-bottom'
                 )
 
-            if col == 0:
+            if dc == 0:
                 drawLabel(
                     str(8 - row),
-                    col * app.squareSize + 5,
-                    row * app.squareSize + 5,
+                    dc * app.squareSize + 5,
+                    dr * app.squareSize + 5,
                     size=12,
                     fill='black' if color == rgb(220, 220, 220) else 'white',
                     align='left-top'
@@ -193,15 +249,17 @@ def drawBoard(app):
     
     if app.game.selectedPiece is not None:
         r, c = app.game.selectedPiece
-        drawRect(c * app.squareSize, r * app.squareSize, app.squareSize, app.squareSize,
+        dr, dc = getDisplayCoords(app, r, c)
+        drawRect(dc * app.squareSize, dr * app.squareSize, app.squareSize, app.squareSize,
                  fill=None, border='yellow', borderWidth=3)
 
     for (r, c) in app.game.validMoves:
+        dr, dc = getDisplayCoords(app, r, c)
         if app.game.board[r][c] is None:
-            drawCircle((c * app.squareSize) + app.squareSize//2, (r * app.squareSize) + app.squareSize//2,
+            drawCircle((dc * app.squareSize) + app.squareSize//2, (dr * app.squareSize) + app.squareSize//2,
                        app.squareSize//6, fill='gold')
         else:
-            drawRect(c * app.squareSize, r * app.squareSize, app.squareSize, app.squareSize,
+            drawRect(dc * app.squareSize, dr * app.squareSize, app.squareSize, app.squareSize,
                      fill=None, border='red', borderWidth=3)
 
 def drawStatus(app):
