@@ -102,6 +102,15 @@ class Queen(Piece):
 class King(Piece):
     def __init__(self, color):
         super().__init__('king', color)
+
+    def isCheck(self, board, row, col, color):
+        for r in range(8):
+            for c in range(8):
+                piece = board[r][c]
+                if piece and piece.color != color:
+                    if (row, col) in piece.getMoves(board, r, c):
+                        return True
+        return False
     
     def getMoves(self, board, row, col):
         moves = []
@@ -117,6 +126,25 @@ class King(Piece):
             if 0 <= r < 8 and 0 <= c < 8:
                 if board[r][c] is None or board[r][c].color != self.color:
                     moves.append((r, c))
+
+        if not self.hasMoved:
+            backRow = 7 if self.color == 'white' else 0
+
+            if isinstance(board[backRow][7], Rook) and not board[backRow][7].hasMoved:
+                if board[backRow][5] is None and board[backRow][6] is None:
+                    if (not self.isCheck(board, backRow, 4, self.color) and
+                            not self.isCheck(board, backRow, 5, self.color) and
+                            not self.isCheck(board, backRow, 6, self.color)):
+                        moves.append((backRow, 6))
+
+            if isinstance(board[backRow][0], Rook) and not board[backRow][0].hasMoved:
+                if board[backRow][1] is None and board[backRow][2] is None and board[backRow][3] is None:
+                    if (not self.isCheck(board, backRow, 4, self.color) and
+                            not self.isCheck(board, backRow, 3, self.color) and
+                            not self.isCheck(board, backRow, 2, self.color)):
+                        moves.append((backRow, 2))
+
+
         return moves
 
 

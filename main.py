@@ -38,6 +38,20 @@ def onMousePress(app, x, y):
         board[row][col], board[startRow][startCol] = piece, None
         piece.hasMoved = True
         piece.position = (row, col)
+
+        if piece.type == 'king' and abs(col - startCol) == 2:
+            if col == 6:
+                board[row][5] = board[row][7]
+                board[row][7] = None
+                board[row][5].hasMoved = True
+            elif col == 2:
+                board[row][3] = board[row][0]
+                board[row][0] = None
+                board[row][3].hasMoved = True
+
+        if piece.type == 'pawn' and (row == 0 or row == 7):
+            board[row][col] = Queen(piece.color)
+
         game.selectedPiece = None
         game.validMoves = []
         game.turn = 'black' if game.turn == 'white' else 'white'
@@ -125,8 +139,9 @@ def drawBoard(app):
                  fill=None, border='yellow', borderWidth=3)
 
     for (r, c) in app.game.validMoves:
+        color = 'green' if app.game.board[r][c] is None else 'red'
         drawRect(c * app.squareSize, r * app.squareSize, app.squareSize, app.squareSize,
-                 fill=None, border='green', borderWidth=3)
+                 fill=None, border=color, borderWidth=3)
 
 def drawStatus(app):
     drawRect(0, app.boardSize, app.width, 50, fill='lightGray')
