@@ -62,19 +62,11 @@ class Knight(Piece):
 
         for drow, dcol in directions:
             r, c = row + drow, col + dcol
-            while 0 <= r < 8 and 0 <= c < 8:
-                if board[r][c] is None:
+            if 0 <= r < 8 and 0 <= c < 8:
+                if board[r][c] is None or board[r][c].color != self.color:
                     moves.append((r, c))
-                    break
-                else:
-                    if board[r][c].color != self.color:
-                        moves.append((r, c))
-                    break
-                r += drow
-                c += dcol
-
         return moves
-
+        
 class Rook(Piece):
     def __init__(self, color):
         super().__init__('rook', color)
@@ -122,17 +114,9 @@ class King(Piece):
 
         for drow, dcol in directions:
             r, c = row + drow, col + dcol
-            while 0 <= r < 8 and 0 <= c < 8:
-                if board[r][c] is None:
+            if 0 <= r < 8 and 0 <= c < 8:
+                if board[r][c] is None or board[r][c].color != self.color:
                     moves.append((r, c))
-                    break
-                else:
-                    if board[r][c].color != self.color:
-                        moves.append((r, c))
-                    break
-                r += drow
-                c += dcol
-
         return moves
 
 
