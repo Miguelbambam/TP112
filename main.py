@@ -80,6 +80,7 @@ def updateEloAfterGame(app):
 def onKeyPress(app, key):
     if key == 'r' and app.screen == 'game':
         app.game = ChessGame()
+        app.selectedWhite, app.selectedBlack = app.selectedBlack, app.selectedWhite
         app.statusMessage = f"{app.users[app.selectedWhite]['name']} (White) vs {app.users[app.selectedBlack]['name']} (Black)"
         app.isFlipped = False
     
@@ -92,15 +93,24 @@ def onKeyPress(app, key):
     
     if app.creatingUser:
         if key == 'enter' and app.newUserName.strip() != "":
+            name = app.newUserName.strip()
+
+            for user in app.users:
+                if user['name'].lower() == name.lower():
+                    return
+
+            if len(app.users) >= 7:
+                return
+
             newUser = {
-                "name": app.newUserName.strip(),
+                "name": name,
                 "elo": 1200
             }
             app.users.append(newUser)
-            with open("users.json", "w") as f:
-                json.dump(app.users, f, indent=2)
+            saveUsers(app.users)
             app.creatingUser = False
             app.newUserName = ""
+
         elif key == 'backspace':
             app.newUserName = app.newUserName[:-1]
         elif len(key) == 1 and key.isprintable():
@@ -117,6 +127,19 @@ def onMousePress(app, x, y):
                     app.selectedWhite = index
                 elif app.selectedBlack is None and index != app.selectedWhite:
                     app.selectedBlack = index
+            index += 1
+       
+        index = 0
+        for user in app.users:
+            boxY = yStart + index * 60
+            if 460 <= x <= 490 and (boxY - 15) <= y <= (boxY + 15):
+                if app.selectedWhite == index:
+                    app.selectedWhite = None
+                elif app.selectedBlack == index:
+                    app.selectedBlack = None
+                app.users.pop(index)
+                saveUsers(app.users)
+                return
             index += 1
 
         if 200 <= x <= 400 and 580 <= y <= 620:
@@ -264,7 +287,7 @@ def drawBoard(app):
 
 def drawStatus(app):
     drawRect(0, app.boardSize, app.width, 50, fill='lightGray')
-    drawLabel(app.statusMessage, app.width // 2, app.boardSize + 20, size=20, bold=True)
+    drawLabel(app.statusMessage, app.width // 2, app.boardSize + 20, size=15, bold=True)
     drawLabel("Press 'r' to reset", app.width // 2, app.boardSize + 40, size=14, bold=True)
 
 def drawHomeScreen(app):
@@ -275,6 +298,7 @@ def drawHomeScreen(app):
     for user in app.users:
         y = yStart + index * 60
         boxColor = 'white'
+
         if app.selectedWhite == index:
             boxColor = 'lightyellow'
         elif app.selectedBlack == index:
@@ -282,6 +306,10 @@ def drawHomeScreen(app):
 
         drawRect(150, y - 25, 300, 50, fill=boxColor, border='black')
         drawLabel(f"{user['name']} (ELO: {user['elo']})", app.width // 2, y, size=20)
+
+        drawRect(460, y - 15, 30, 30, fill='red')
+        drawLabel('X', 475, y, size=16, fill='white')
+
         index += 1
 
     if app.selectedWhite is None:
