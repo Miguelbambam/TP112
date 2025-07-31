@@ -29,7 +29,7 @@ def calculateElo(ratingA, ratingB, scoreA, K=20):
 
 def onAppStart(app):
     app.width = 600
-    app.height = 650 
+    app.height = 700 
     app.boardSize = 600
     app.squareSize = app.boardSize // 8
     
@@ -74,7 +74,7 @@ def updateEloAfterGame(app):
 
     saveUsers(app.users)
 
-    app.statusMessage = f"Game Over! {resultMessage} New ELOs — {whiteUser['name']}: {newWhiteElo}, {blackUser['name']}: {newBlackElo}"
+    app.statusMessage = f"Game Over! {resultMessage} New ELOs - {whiteUser['name']}: {newWhiteElo}, {blackUser['name']}: {newBlackElo}"
 
 
 def onKeyPress(app, key):
@@ -119,28 +119,25 @@ def onKeyPress(app, key):
 def onMousePress(app, x, y):
     if app.screen == 'home':
         yStart = 100
-        index = 0
-        for user in app.users:
-            boxY = yStart + index * 60
+
+        for i in range(len(app.users)):
+            boxY = yStart + i * 60
             if 150 <= x <= 450 and (boxY - 25) <= y <= (boxY + 25):
                 if app.selectedWhite is None:
-                    app.selectedWhite = index
-                elif app.selectedBlack is None and index != app.selectedWhite:
-                    app.selectedBlack = index
-            index += 1
+                    app.selectedWhite = i
+                elif app.selectedBlack is None and i != app.selectedWhite:
+                    app.selectedBlack = i
        
-        index = 0
-        for user in app.users:
-            boxY = yStart + index * 60
+        for i in range(len(app.users)):
+            boxY = yStart + i * 60
             if 460 <= x <= 490 and (boxY - 15) <= y <= (boxY + 15):
-                if app.selectedWhite == index:
+                if app.selectedWhite == i:
                     app.selectedWhite = None
-                elif app.selectedBlack == index:
+                elif app.selectedBlack == i:
                     app.selectedBlack = None
-                app.users.pop(index)
+                app.users.pop(i)
                 saveUsers(app.users)
                 return
-            index += 1
 
         if 200 <= x <= 400 and 580 <= y <= 620:
             app.creatingUser = True
@@ -150,6 +147,19 @@ def onMousePress(app, x, y):
 
     if app.screen != 'game':
         return
+    
+    if 10 <= x <= 90 and app.boardSize + 50 <= y <= app.boardSize + 90:
+        if app.game.gameOver: return
+        app.game.gameOver = True
+        app.game.winner = 'black' if app.game.turn == 'white' else 'white'
+        updateEloAfterGame(app)
+
+    if app.width - 90 <= x <= app.width - 10 and app.boardSize + 50 <= y <= app.boardSize + 90:
+        if app.game.gameOver: return
+        app.game.gameOver = True
+        app.game.winner = None
+        updateEloAfterGame(app)
+
 
     row = y // app.squareSize
     col = x // app.squareSize
@@ -204,7 +214,6 @@ def onMousePress(app, x, y):
                 updateEloAfterGame(app)
         else:
             app.statusMessage = f"{game.turn.capitalize()}'s turn"
-        return
 
     piece = board[row][col]
     if piece and piece.color == game.turn:
@@ -286,9 +295,15 @@ def drawBoard(app):
                      fill=None, border='red', borderWidth=3)
 
 def drawStatus(app):
-    drawRect(0, app.boardSize, app.width, 50, fill='lightGray')
-    drawLabel(app.statusMessage, app.width // 2, app.boardSize + 20, size=15, bold=True)
-    drawLabel("Press 'r' to reset", app.width // 2, app.boardSize + 40, size=14, bold=True)
+    drawRect(0, app.boardSize, app.width, 100, fill='lightGray')
+    drawLabel(app.statusMessage, app.width // 2, app.boardSize + 30, size=16, bold=True)
+    drawLabel("Press 'r' to reset", app.width // 2, app.boardSize + 60, size=14, bold=True)
+
+    drawRect(10, app.boardSize + 50, 80, 40, fill='red', border='black')
+    drawLabel("Resign", 50, app.boardSize + 70, size=14, fill='white', bold=True)
+
+    drawRect(app.width - 90, app.boardSize + 50, 80, 40, fill='orange', border='black')
+    drawLabel("Draw", app.width - 50, app.boardSize + 70, size=14, fill='white', bold=True)
 
 def drawHomeScreen(app):
     drawLabel("Select White and Black Players", app.width // 2, 40, size=24, bold=True)
